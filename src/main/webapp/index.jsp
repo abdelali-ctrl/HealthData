@@ -71,9 +71,10 @@
             background: var(--white);
             border-radius: var(--radius);
             box-shadow: var(--shadow);
-            padding: 25px;
+            padding: 20px;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
+
 
         .card:hover {
             transform: translateY(-5px);
@@ -226,6 +227,24 @@
             font-size: 0.9rem;
         }
 
+        .card-description {
+            color: var(--gray);
+            margin-bottom: 15px;
+            font-size: 0.95rem;
+        }
+
+        .compact-card {
+            min-height: 200px;
+        }
+
+        .compact-card .menu-list {
+            margin-top: 10px;
+        }
+
+        .compact-card .card-description {
+            margin-bottom: 10px;
+        }
+
         @media (max-width: 768px) {
             .dashboard {
                 grid-template-columns: 1fr;
@@ -250,19 +269,19 @@
     </header>
 
     <div class="dashboard">
-        <div class="card">
+        <div class="card compact-card">
             <h2><i class="fas fa-users"></i> Patient Management</h2>
+            <p class="card-description">Manage patient records, demographics, and medical history</p>
             <ul class="menu-list">
                 <li><a href="patients"><i class="fas fa-list"></i> Patient List</a></li>
-                <li><a href="patients?action=add"><i class="fas fa-user-plus"></i> Add a Patient</a></li>
             </ul>
         </div>
 
-        <div class="card">
+        <div class="card compact-card">
             <h2><i class="fas fa-chart-line"></i> Measurements & Statistics</h2>
+            <p class="card-description">Track and analyze patient vital signs and health metrics</p>
             <ul class="menu-list">
                 <li><a href="vitals"><i class="fas fa-heart"></i> Vital Measurements</a></li>
-                <li><a href="vitals?action=stats"><i class="fas fa-chart-bar"></i> View Statistics</a></li>
             </ul>
         </div>
 
@@ -302,6 +321,7 @@
             </form>
         </div>
     </div>
+
 
     <footer>
         <p>HealthData Manager &copy; 2023 - Health data management system</p>

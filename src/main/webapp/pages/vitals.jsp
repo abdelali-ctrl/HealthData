@@ -272,83 +272,190 @@
         <p>Add, view and analyze patient health data</p>
     </header>
 
-    <div class="card">
-        <h2><i class="fas fa-plus-circle"></i> Add a Measurement</h2>
-        <form method="post" action="vitals" class="form">
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="typeMesure">Measurement Type</label>
-                    <input type="text" id="typeMesure" name="typeMesure" class="form-control" placeholder="Ex: Blood Pressure, Blood Sugar..." required>
-                </div>
+    <!-- Back to Home button at the top -->
+    <div style="text-align: center; margin: 20px 0;">
+        <a href="${pageContext.request.contextPath}/index.jsp" class="btn btn-back">
+            <i class="fas fa-arrow-left"></i> Back to Home
+        </a>
+    </div>
 
-                <div class="form-group">
-                    <label for="valeur">Value</label>
-                    <input type="number" id="valeur" name="valeur" step="0.01" class="form-control" placeholder="Ex: 12.5" required>
-                </div>
+    <div style="text-align: center; margin: 20px 0;">
+        <a href="vitals" class="btn ${empty mode ? 'btn-primary' : 'btn-secondary'}">All Measurements</a>
+        <a href="vitals?mode=stats" class="btn ${mode == 'stats' ? 'btn-primary' : 'btn-secondary'}">Statistics</a>
+        <a href="vitals?mode=anomalies" class="btn ${mode == 'anomalies' ? 'btn-danger' : 'btn-secondary'}">Anomalies</a>
+
+    </div>
+    <c:if test="${mode == 'anomalies'}">
+        <div style="background-color: #fdecea; color: #c0392b; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+            ⚠ Showing all measurements outside of normal range.
+        </div>
+    </c:if>
+
+    <c:choose>
+        <c:when test="${mode == 'stats'}">
+            <div class="card">
+                <h2><i class="fas fa-filter"></i> Filter by Patient</h2>
+                <form method="get" action="vitals" class="form">
+                    <input type="hidden" name="mode" value="stats">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="patientFilter">Select Patient</label>
+                            <select id="patientFilter" name="patientId" class="form-control">
+                                <option value="">All Patients</option>
+                                <c:forEach var="p" items="${patients}">
+                                    <option value="${p.id}" ${param.patientId == p.id ? 'selected' : ''}>${p.nom}</option>
+                                </c:forEach>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Apply Filter
+                    </button>
+                </form>
             </div>
 
-            <div class="form-group">
-                <label for="patientId">Patient</label>
-                <select id="patientId" name="patientId" class="form-control" required>
-                    <option value="" disabled selected>Select a patient</option>
-                    <c:forEach var="p" items="${patients}">
-                        <option value="${p.id}">${p.nom}</option>
+            <div class="section-title">
+                <i class="fas fa-chart-bar"></i>
+                <h3>Measurement Statistics</h3>
+            </div>
+
+            <div class="stats-grid">
+                <c:forEach var="s" items="${stats}">
+                    <div class="stat-card">
+                        <!-- Format average value -->
+                        <div class="stat-value">
+                            <fmt:formatNumber value="${s[1]}" type="number" minFractionDigits="2" maxFractionDigits="2"/>
+                        </div>
+
+                        <div class="stat-label">${s[0]} (average)</div>
+
+                        <div style="margin-top: 10px; font-size: 0.8rem; color: var(--gray);">
+                            Min: <fmt:formatNumber value="${s[2]}" type="number" minFractionDigits="2" maxFractionDigits="2"/>
+                            | Max: <fmt:formatNumber value="${s[3]}" type="number" minFractionDigits="2" maxFractionDigits="2"/>
+                        </div>
+                    </div>
+                </c:forEach>
+            </div>
+
+
+        </c:when>
+
+        <c:when test="${mode == 'anomalies'}">
+            <div class="section-title">
+                <i class="fas fa-exclamation-triangle"></i>
+                <h3>Detected Anomalies</h3>
+            </div>
+
+            <div class="card">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Patient</th>
+                        <th>Type</th>
+                        <th>Value</th>
+                        <th>Date</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <c:forEach var="v" items="${vitals}">
+                        <tr>
+                            <td>${v.patient.nom}</td>
+                            <td>${v.typeMesure}</td>
+                            <td>${v.valeur}</td>
+                            <td>${v.dateMesure}</td>
+                        </tr>
                     </c:forEach>
-                </select>
+                    </tbody>
+                </table>
+            </div>
+        </c:when>
+
+        <c:otherwise>
+            <div class="card">
+                <h2><i class="fas fa-plus-circle"></i> Add a Measurement</h2>
+                <form method="post" action="vitals" class="form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="typeMesure">Measurement Type</label>
+                            <input type="text" id="typeMesure" name="typeMesure" class="form-control" placeholder="Ex: Blood Pressure, Blood Sugar..." required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="valeur">Value</label>
+                            <input type="number" id="valeur" name="valeur" step="0.01" class="form-control" placeholder="Ex: 12.5" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="patientId">Patient</label>
+                        <select id="patientId" name="patientId" class="form-control" required>
+                            <option value="" disabled selected>Select a patient</option>
+                            <c:forEach var="p" items="${patients}">
+                                <option value="${p.id}">${p.nom}</option>
+                            </c:forEach>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-block">
+                        <i class="fas fa-save"></i> Save Measurement
+                    </button>
+                </form>
+            </div>
+            <div class="card">
+                <h2><i class="fas fa-filter"></i> Filter by Patient</h2>
+                <form method="get" action="vitals" class="form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="patientFilter">Select Patient</label>
+                            <select id="patientFilter" name="patientId" class="form-control">
+                                <option value="">All Patients</option>
+                                <c:forEach var="p" items="${patients}">
+                                    <option value="${p.id}" ${param.patientId == p.id ? 'selected' : ''}>${p.nom}</option>
+                                </c:forEach>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Apply Filter
+                    </button>
+                </form>
             </div>
 
-            <button type="submit" class="btn btn-primary btn-block">
-                <i class="fas fa-save"></i> Save Measurement
-            </button>
-        </form>
-    </div>
 
-    <div class="section-title">
-        <i class="fas fa-chart-bar"></i>
-        <h3>Measurement Statistics</h3>
-    </div>
 
-    <div class="stats-grid">
-        <c:forEach var="s" items="${stats}">
-            <div class="stat-card">
-                <div class="stat-value">${s[1]}</div>
-                <div class="stat-label">${s[0]} (average)</div>
-                <div style="margin-top: 10px; font-size: 0.8rem; color: var(--gray);">
-                    Min: ${s[2]} | Max: ${s[3]}
-                </div>
+            <div class="section-title">
+                <i class="fas fa-table"></i>
+                <h3>All Measurements</h3>
             </div>
-        </c:forEach>
-    </div>
 
-    <div class="section-title">
-        <i class="fas fa-table"></i>
-        <h3>All Measurements</h3>
-    </div>
+            <div class="card">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Type</th>
+                        <th>Value</th>
+                        <th>Date</th>
+                        <th>Patient</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <c:forEach var="v" items="${vitals}">
+                        <tr>
+                            <td>${v.id}</td>
+                            <td>${v.typeMesure}</td>
+                            <td>${v.valeur}</td>
+                            <td>${v.dateMesure}</td>
+                            <td>${v.patient.nom}</td>
+                        </tr>
+                    </c:forEach>
+                    </tbody>
+                </table>
+            </div>
+        </c:otherwise>
+    </c:choose>
 
-    <div class="card">
-        <table>
-            <thead>
-            <tr>
-                <th>ID</th>
-                <th>Type</th>
-                <th>Value</th>
-                <th>Date</th>
-                <th>Patient</th>
-            </tr>
-            </thead>
-            <tbody>
-            <c:forEach var="v" items="${vitals}">
-                <tr>
-                    <td>${v.id}</td>
-                    <td>${v.typeMesure}</td>
-                    <td>${v.valeur}</td>
-                    <td>${v.dateMesure}</td>
-                    <td>${v.patient.nom}</td>
-                </tr>
-            </c:forEach>
-            </tbody>
-        </table>
-    </div>
+
 
     <div style="text-align: center; margin-top: 30px;">
         <a href="${pageContext.request.contextPath}/index.jsp" class="btn btn-back">

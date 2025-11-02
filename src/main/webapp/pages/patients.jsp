@@ -261,6 +261,52 @@
             background-color: #c0392b;
         }
 
+        .alert {
+            padding: 15px;
+            border-radius: var(--radius);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .search-container {
+            margin-bottom: 20px;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 10px;
+        }
+
+        .search-input {
+            flex-grow: 1;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--gray);
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            color: #ddd;
+        }
+
         @media (max-width: 768px) {
             .form-row {
                 grid-template-columns: 1fr;
@@ -278,6 +324,10 @@
             .action-buttons {
                 flex-direction: column;
             }
+
+            .search-box {
+                flex-direction: column;
+            }
         }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -289,33 +339,84 @@
         <p>Add, view and manage patient information</p>
     </header>
 
+    <div style="text-align: center; margin: 20px 0;">
+        <a href="${pageContext.request.contextPath}/index.jsp" class="btn btn-back">
+            <i class="fas fa-arrow-left"></i> Back to Home
+        </a>
+    </div>
+
+    <!-- Success/Error Messages -->
+    <c:if test="${not empty successMessage}">
+        <div class="alert alert-success">
+            <i class="fas fa-check-circle"></i> ${successMessage}
+        </div>
+    </c:if>
+
+    <c:if test="${not empty errorMessage}">
+        <div class="alert alert-error">
+            <i class="fas fa-exclamation-circle"></i> ${errorMessage}
+        </div>
+    </c:if>
+
     <div class="card">
-        <h2><i class="fas fa-user-plus"></i> Add New Patient</h2>
+        <c:choose>
+            <c:when test="${not empty patientToEdit}">
+                <h2><i class="fas fa-user-edit"></i> Edit Patient (${patientToEdit.nom})</h2>
+            </c:when>
+            <c:otherwise>
+                <h2><i class="fas fa-user-plus"></i> Add New Patient</h2>
+            </c:otherwise>
+        </c:choose>
+
         <form method="post" action="patients" class="form">
+
+            <c:if test="${not empty patientToEdit}">
+                <input type="hidden" name="patientId" value="${patientToEdit.id}">
+            </c:if>
+
             <div class="form-group">
                 <label for="nom">Full Name</label>
-                <input type="text" id="nom" name="nom" class="form-control" placeholder="Enter patient's full name" required>
+                <input type="text" id="nom" name="nom" class="form-control"
+                       value="${patientToEdit.nom}"
+                       placeholder="Enter patient's full name" required>
             </div>
 
             <div class="form-row">
                 <div class="form-group">
                     <label for="age">Age</label>
-                    <input type="number" id="age" name="age" class="form-control" placeholder="Enter age" required>
+                    <input type="number" id="age" name="age" class="form-control"
+                           value="${patientToEdit.age}"
+                           placeholder="Enter age" min="0" max="150" required>
                 </div>
 
                 <div class="form-group">
                     <label for="sexe">Gender</label>
                     <select id="sexe" name="sexe" class="form-control" required>
-                        <option value="" disabled selected>Select gender</option>
-                        <option value="H">Male</option>
-                        <option value="F">Female</option>
+                        <option value="" disabled ${empty patientToEdit ? 'selected' : ''}>Select gender</option>
+                        <option value="H" ${patientToEdit.sexe == 'H' ? 'selected' : ''}>Male</option>
+                        <option value="F" ${patientToEdit.sexe == 'F' ? 'selected' : ''}>Female</option>
                     </select>
                 </div>
             </div>
 
+
+
             <button type="submit" class="btn btn-primary btn-block">
-                <i class="fas fa-plus"></i> Add Patient
+                <c:choose>
+                    <c:when test="${not empty patientToEdit}">
+                        <i class="fas fa-save"></i> Update Patient
+                    </c:when>
+                    <c:otherwise>
+                        <i class="fas fa-plus"></i> Add Patient
+                    </c:otherwise>
+                </c:choose>
             </button>
+
+            <c:if test="${not empty patientToEdit}">
+                <a href="patients" class="btn btn-back btn-block" style="margin-top: 10px;">
+                    <i class="fas fa-times"></i> Cancel Edit
+                </a>
+            </c:if>
         </form>
     </div>
 
@@ -329,44 +430,75 @@
         <h3>Patient List</h3>
     </div>
 
-    <div class="card">
-        <table>
-            <thead>
-            <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Age</th>
-                <th>Gender</th>
-                <th>Actions</th>
-            </tr>
-            </thead>
-            <tbody>
-            <c:forEach var="p" items="${patients}">
-                <tr>
-                    <td>${p.id}</td>
-                    <td>${p.nom}</td>
-                    <td>${p.age}</td>
-                    <td>
-                        <c:choose>
-                            <c:when test="${p.sexe == 'H'}">Male</c:when>
-                            <c:when test="${p.sexe == 'F'}">Female</c:when>
-                            <c:otherwise>${p.sexe}</c:otherwise>
-                        </c:choose>
-                    </td>
-                    <td>
-                        <div class="action-buttons">
-                            <a href="patients?deleteId=${p.id}"
-                               class="btn btn-delete btn-small"
-                               onclick="return confirm('Are you sure you want to delete this patient?');">
-                                <i class="fas fa-trash"></i> Delete
-                            </a>
-                        </div>
-                    </td>
+    <!-- Search Functionality -->
+    <div class="search-container">
+        <form method="get" action="patients" class="search-box">
+            <input type="text" name="search" class="form-control search-input"
+                   placeholder="Search patients by name..." value="${param.search}">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-search"></i> Search
+            </button>
+            <c:if test="${not empty param.search}">
+                <a href="patients" class="btn btn-back">
+                    <i class="fas fa-times"></i> Clear
+                </a>
+            </c:if>
+        </form>
+    </div>
 
-                </tr>
-            </c:forEach>
-            </tbody>
-        </table>
+    <div class="card">
+        <c:choose>
+            <c:when test="${not empty patients}">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Age</th>
+                        <th>Gender</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <c:forEach var="p" items="${patients}">
+                        <tr>
+                            <td>${p.id}</td>
+                            <td>${p.nom}</td>
+                            <td>${p.age}</td>
+                            <td>
+                                <c:choose>
+                                    <c:when test="${p.sexe == 'H'}">Male</c:when>
+                                    <c:when test="${p.sexe == 'F'}">Female</c:when>
+                                    <c:otherwise>${p.sexe}</c:otherwise>
+                                </c:choose>
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    <a href="patients?editId=${p.id}"
+                                       class="btn btn-edit btn-small">
+                                        <i class="fas fa-pencil-alt"></i> Edit
+                                    </a>
+
+                                    <a href="patients?deleteId=${p.id}"
+                                       class="btn btn-delete btn-small"
+                                       onclick="return confirm('Are you sure you want to delete patient: ${p.nom}?');">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    </c:forEach>
+                    </tbody>
+                </table>
+            </c:when>
+            <c:otherwise>
+                <div class="empty-state">
+                    <i class="fas fa-user-injured"></i>
+                    <h3>No Patients Found</h3>
+                    <p>There are no patients in the system yet. Add your first patient using the form above.</p>
+                </div>
+            </c:otherwise>
+        </c:choose>
     </div>
 
     <div style="text-align: center; margin-top: 30px;">
@@ -379,5 +511,36 @@
         <p>HealthData Manager &copy; 2023 - Health Data Management System</p>
     </footer>
 </div>
+
+<script>
+    // Client-side form validation
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.querySelector('form');
+
+        form.addEventListener('submit', function(event) {
+            let isValid = true;
+            const nameInput = document.getElementById('nom');
+            const ageInput = document.getElementById('age');
+
+            // Name validation
+            if (nameInput.value.trim().length < 2) {
+                alert('Please enter a valid name (at least 2 characters)');
+                nameInput.focus();
+                isValid = false;
+            }
+
+            // Age validation
+            if (ageInput.value < 0 || ageInput.value > 150) {
+                alert('Please enter a valid age (0-150)');
+                ageInput.focus();
+                isValid = false;
+            }
+
+            if (!isValid) {
+                event.preventDefault();
+            }
+        });
+    });
+</script>
 </body>
-</html>v
+</html>

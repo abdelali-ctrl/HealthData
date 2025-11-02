@@ -39,5 +39,25 @@ public class PatientDao {
         em.getTransaction().commit();
         em.close();
     }
+    public void update(Patient p) {
+        EntityManager em = JpaUtil.getEntityManager();
+        em.getTransaction().begin();
+        em.merge(p);
+        em.getTransaction().commit();
+        em.close();
+    }
+
+    public List<Patient> searchByName(String searchTerm) {
+        EntityManager em = JpaUtil.getEntityManager();
+
+
+        String jpql = "SELECT p FROM Patient p WHERE LOWER(p.nom) LIKE LOWER(:term)";
+
+        List<Patient> list = em.createQuery(jpql, Patient.class)
+                .setParameter("term", "%" + searchTerm + "%")
+                .getResultList();
+        em.close();
+        return list;
+    }
 
 }

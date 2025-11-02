@@ -12,6 +12,7 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @WebServlet("/vitals")
 public class VitalRecordServlet extends HttpServlet {
@@ -22,16 +23,43 @@ public class VitalRecordServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
 
-        // Afficher les 100 dernières mesures
-        req.setAttribute("vitals", vitalDao.findRecent(100));
+        String patientIdParam = req.getParameter("patientId");
+        String mode = req.getParameter("mode");
+        List<VitalRecord> vitals = null;
+        List<?> stats = null;
 
-        // Afficher les stats
-        req.setAttribute("stats", vitalDao.getStatsByType());
+        if ("anomalies".equalsIgnoreCase(mode)) {
+            vitals = vitalDao.findAllAnomalies();
+            req.setAttribute("mode", "anomalies");
 
-        // Liste des patients pour le formulaire
+        } else if ("stats".equalsIgnoreCase(mode)) {
+
+            if (patientIdParam != null && !patientIdParam.isEmpty()) {
+                long patientId = Long.parseLong(patientIdParam);
+                stats = vitalDao.getStatsByPatientId(patientId);
+                req.setAttribute("selectedPatientId", patientId);
+            } else {
+                stats = vitalDao.getStatsByType();
+            }
+            req.setAttribute("mode", "stats");
+
+        } else {
+            if (patientIdParam != null && !patientIdParam.isEmpty()) {
+                long patientId = Long.parseLong(patientIdParam);
+                vitals = vitalDao.findByPatientId(patientId);
+                stats = vitalDao.getStatsByPatientId(patientId);
+                req.setAttribute("selectedPatientId", patientId);
+            } else {
+                vitals = vitalDao.findRecent(100);
+                stats = vitalDao.getStatsByType();
+            }
+        }
+
+        // Common data for JSP
         req.setAttribute("patients", patientDao.findAll());
+        req.setAttribute("vitals", vitals);
+        req.setAttribute("stats", stats);
 
-        // Envoi vers la JSP
         req.getRequestDispatcher("/pages/vitals.jsp").forward(req, resp);
     }
 
