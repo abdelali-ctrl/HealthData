@@ -14,7 +14,7 @@ public class Patient {
     private String sexe;
 
     @OneToMany(mappedBy = "patient", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<VitalRecord> vitals;
+    private transient List<VitalRecord> vitals;
 
     public Patient() {}
 

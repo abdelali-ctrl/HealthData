@@ -17,12 +17,54 @@ public class VitalRecordDao {
         em.close();
     }
 
+    // --- ADD THIS NEW METHOD ---
+    public VitalRecord findById(Long id) {
+        EntityManager em = JpaUtil.getEntityManager();
+        VitalRecord v = null;
+        try {
+            v = em.createQuery(
+                            "SELECT v FROM VitalRecord v " +
+                                    "JOIN FETCH v.patient " +
+                                    "WHERE v.id = :vid",
+                            VitalRecord.class)
+                    .setParameter("vid", id)
+                    .getSingleResult();
+        } catch (jakarta.persistence.NoResultException e) {
+            // No record found, return null
+        } finally {
+            em.close();
+        }
+        return v;
+    }
+
+    // --- ADD THIS NEW METHOD ---
+    public void update(VitalRecord v) {
+        EntityManager em = JpaUtil.getEntityManager();
+        em.getTransaction().begin();
+        em.merge(v);
+        em.getTransaction().commit();
+        em.close();
+    }
+
+    // --- ADD THIS NEW METHOD ---
+    public void deleteById(Long id) {
+        EntityManager em = JpaUtil.getEntityManager();
+        em.getTransaction().begin();
+        VitalRecord v = em.find(VitalRecord.class, id);
+        if (v != null) {
+            em.remove(v);
+        }
+        em.getTransaction().commit();
+        em.close();
+    }
+
 
     /**
      * Retourne la liste limitée des dernières mesures (ex: 100 dernières)
      * avec les patients associés pour éviter le N+1.
      */
     public List<VitalRecord> findRecent(int limit) {
+        // ... (existing method, no change)
         EntityManager em = JpaUtil.getEntityManager();
         List<VitalRecord> list = em.createQuery(
                         "SELECT v FROM VitalRecord v " +
@@ -39,6 +81,7 @@ public class VitalRecordDao {
      * Retourne les statistiques moyennes / min / max par type de mesure.
      */
     public List<Object[]> getStatsByType() {
+        // ... (existing method, no change)
         EntityManager em = JpaUtil.getEntityManager();
         List<Object[]> results = em.createQuery(
                         "SELECT v.typeMesure, AVG(v.valeur), MIN(v.valeur), MAX(v.valeur) " +
@@ -53,6 +96,7 @@ public class VitalRecordDao {
      * Retourne toutes les mesures pour un patient spécifique.
      */
     public List<VitalRecord> findByPatientId(Long patientId) {
+        // ... (existing method, no change)
         EntityManager em = JpaUtil.getEntityManager();
         List<VitalRecord> list = em.createQuery(
                         "SELECT v FROM VitalRecord v " +
@@ -71,6 +115,7 @@ public class VitalRecordDao {
      * Retourne les statistiques moyennes / min / max par type de mesure pour un patient spécifique.
      */
     public List<Object[]> getStatsByPatientId(Long patientId) {
+        // ... (existing method, no change)
         EntityManager em = JpaUtil.getEntityManager();
         List<Object[]> results = em.createQuery(
                         "SELECT v.typeMesure, AVG(v.valeur), MIN(v.valeur), MAX(v.valeur) " +
@@ -85,6 +130,7 @@ public class VitalRecordDao {
     }
 
     public List<VitalRecord> findAllAnomalies() {
+        // ... (existing method, no change)
         EntityManager em = JpaUtil.getEntityManager();
 
         // This query combines all anomaly rules using 'OR'.
@@ -100,7 +146,4 @@ public class VitalRecordDao {
         em.close();
         return list;
     }
-
-
-
 }
